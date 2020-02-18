@@ -18,30 +18,12 @@ func main() {
 		panic(err.Error()) // Just for example purpose. You should use proper error handling instead of panic
 	}
 
+	us := service.NewUserDB(db)
+
+	fmt.Println(us.GetUser(2))
+
 	defer db.Close()
 
-}
-
-// InsertUser ...
-func InsertUser(db *sql.DB, u service.User) error {
-
-	fmt.Printf("User: %v", u)
-
-	userStmt := "INSERT INTO User (firstName, lastName, password, email, dateCreated, role) VALUES(?,?,?,?,?,?)"
-	stmtIns, err := db.Prepare(userStmt)
-	if err != nil {
-		return err
-	}
-
-	defer stmtIns.Close()
-
-	_, err = stmtIns.Exec(u.FirstName, u.LastName, u.Password, u.Email, u.DateCreated, u.Role)
-
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 // EncryptPassword ...
