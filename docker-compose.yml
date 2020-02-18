@@ -1,0 +1,25 @@
+version: '3.7'
+services: 
+  golang:
+    container_name: golang
+    image: golang:1.14-rc-stretch
+    volumes:
+      - .:/go/src/app
+    command: sleep infinity
+    networks: 
+      - dev
+    ports: 
+      - "8080:8080"
+  mysql:
+    container_name: mysql
+    image: mysql:latest
+    environment: 
+      - MYSQL_ROOT_PASSWORD=zues 
+    networks: 
+      - dev
+    ports: 
+      - "3306:3306"
+    
+    
+networks: 
+  dev:
