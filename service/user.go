@@ -10,11 +10,11 @@ import (
 // User ...
 type User struct {
 	ID          string `json:"id"`
-	FirstName   string `json:"firstName" validate:"required"`
-	LastName    string `json:"lastName"  validate:"required"`
+	FirstName   string `json:"first_name" validate:"required"`
+	LastName    string `json:"last_name"  validate:"required"`
 	Password    string `json:"password"  validate:"required"`
 	Email       string `json:"email"     validate:"required"`
-	DateCreated string `json:"dateCreated"`
+	DateCreated string `json:"date_created"`
 	Role        string `json:"role"`
 }
 
@@ -61,7 +61,7 @@ func NewUserDB(db *sql.DB) *UserDB {
 // InsertUser ...
 func (udb *UserDB) InsertUser(u User) error {
 
-	userStmt := "INSERT INTO User (firstName, lastName, password, email, dateCreated, role) VALUES($1,$2,$3,$4,$5,$6)"
+	userStmt := "INSERT INTO \"user\" (first_name, last_name, password, email, date_created, role) VALUES ($1,$2,$3,$4,$5,$6)"
 	stmtIns, err := udb.db.Prepare(userStmt)
 	if err != nil {
 		return err
@@ -87,7 +87,7 @@ func (udb *UserDB) InsertUser(u User) error {
 // GetUser ...
 func (udb *UserDB) GetUser(id int) (*User, error) {
 
-	stmtOut, err := udb.db.Prepare("SELECT * FROM User WHERE id = $1 LIMIT 1")
+	stmtOut, err := udb.db.Prepare("SELECT * FROM user WHERE id = $1 LIMIT 1")
 	if err != nil {
 		return nil, err
 	}

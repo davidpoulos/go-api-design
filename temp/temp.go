@@ -8,11 +8,11 @@ import (
 	"github.com/davidpoulos/hackin/service"
 	"golang.org/x/crypto/bcrypt"
 
-	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/lib/pq"
 )
 
 func main() {
-	db, err := GetMySQLDB()
+	db, err := GetPostGresDB()
 
 	if err != nil {
 		panic(err.Error()) // Just for example purpose. You should use proper error handling instead of panic
@@ -20,7 +20,12 @@ func main() {
 
 	us := service.NewUserDB(db)
 
-	fmt.Println(us.GetUser(2))
+	fakeUser := GetMockUser()
+	
+	e := us.InsertUser(*fakeUser)
+	fmt.Println(e)
+
+	//fmt.Println(us.GetUser(2))
 
 	defer db.Close()
 
@@ -52,12 +57,18 @@ func GetMockUser() (u *service.User) {
 }
 
 // GetMySQLDB ...
-func GetMySQLDB() (db *sql.DB, err error) {
-	dbDriver := "mysql"
-	dbUser := "root"
-	dbPass := "zues"
-	dbName := "testdb"
-	db, err = sql.Open(dbDriver, dbUser+":"+dbPass+"@/"+dbName)
+func GetPostGresDB() (db *sql.DB, err error) {
+	user := "root"
+	pass := "zues"
+	dbname := "testdb"
+	host := "localhost"
+	port := 5432
+
+	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
+    "password=%s dbname=%s sslmode=disable",
+    host, port, user, pass, dbname)
+	
+	db, err = sql.Open("postgres", psqlInfo)
 
 	if err != nil {
 		return nil, err
