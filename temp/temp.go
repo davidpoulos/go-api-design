@@ -20,12 +20,12 @@ func main() {
 
 	us := service.NewUserDB(db)
 
-	fakeUser := GetMockUser()
+	// fakeUser := GetMockUser()
 	
-	e := us.InsertUser(*fakeUser)
-	fmt.Println(e)
+	// e := us.InsertUser(*fakeUser)
+	// fmt.Println(e)
 
-	//fmt.Println(us.GetUser(2))
+	fmt.Println(us.GetUser(1))
 
 	defer db.Close()
 
