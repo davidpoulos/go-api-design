@@ -10,15 +10,17 @@ services:
       - dev
     ports: 
       - "8080:8080"
-  mysql:
-    container_name: mysql
-    image: mysql:latest
+  postgres:
+    container_name: postgres
+    image: postgres:latest
     environment: 
-      - MYSQL_ROOT_PASSWORD=zues 
+      - POSTGRES_PASSWORD=zues 
+      - POSTGRES_DB=testdb
+      - POSTGRES_USER=root
     networks: 
       - dev
     ports: 
-      - "3306:3306"
+      - "5432:5432"
     
     
 networks: 
