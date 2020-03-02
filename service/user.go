@@ -2,6 +2,10 @@ package service
 
 import (
 	"database/sql"
+	"fmt"
+	"strconv"
+	"strings"
+	"time"
 
 	"golang.org/x/crypto/bcrypt"
 	"gopkg.in/go-playground/validator.v9"
@@ -9,13 +13,23 @@ import (
 
 // User ...
 type User struct {
-	ID          string `json:"id"`
+	ID          int    `json:"id"`
 	FirstName   string `json:"first_name" validate:"required"`
 	LastName    string `json:"last_name"  validate:"required"`
 	Password    string `json:"password"  validate:"required"`
 	Email       string `json:"email"     validate:"required"`
 	DateCreated string `json:"date_created"`
+	DateUpdated string `json:"date_updated"`
 	Role        string `json:"role"`
+}
+
+// NewUser ...
+func NewUser() *User {
+	t := time.Now()
+	return &User{
+		DateUpdated: fmt.Sprintf("%d-%02d-%02d",
+			t.Year(), t.Month(), t.Day()),
+	}
 }
 
 // EncryptPassword ...
@@ -33,7 +47,7 @@ func UserStructLevelValidation(sl validator.StructLevel) {
 	user := sl.Current().Interface().(User)
 
 	// TODO: VALIDATE EVERYTHING HERE -- Look at ways to do it in the metadata
-	// IE. EMAIL 
+	// IE. EMAIL
 	if user.Email == "David" || len(user.Password) == 0 {
 		sl.ReportError(user.Email, "email", "email", "email", "")
 		sl.ReportError(user.Password, "pasword", "Password", "pass", "")
@@ -84,10 +98,64 @@ func (udb *UserDB) InsertUser(u User) error {
 	return nil
 }
 
+// UpdateUser ...
+func (udb *UserDB) UpdateUser(id int, u *User) error {
+
+	preparedUpdate := "UPDATE \"user\" SET "
+
+	fields := make(map[string]string, 0)
+
+	if u.FirstName != "" {
+		fields["first_name"] = u.FirstName
+	}
+
+	if u.LastName != "" {
+		fields["last_name"] = u.LastName
+	}
+
+	if u.Email != "" {
+		fields["email"] = u.Email
+	}
+
+	if u.DateCreated != "" {
+		fields["date_created"] = u.DateCreated
+	}
+
+	if u.Role != "" {
+		fields["role"] = u.Role
+	}
+
+	if u.Password != "" {
+		fields["password"] = u.Password
+	}
+
+	i := 1
+	values := make([]interface{}, 0)
+	for k, v := range fields {
+		preparedUpdate = preparedUpdate + k + "= $" + strconv.Itoa(i) + ","
+		values = append(values, v)
+		i++
+	}
+
+	preparedUpdate = strings.TrimRight(preparedUpdate, ", ")
+	preparedUpdate += "WHERE id = $" + strconv.Itoa(len(values)+1)
+
+	values = append(values, strconv.Itoa(id))
+
+	fmt.Println(preparedUpdate)
+	_, err := udb.db.Query(preparedUpdate, values...)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // GetUser ...
 func (udb *UserDB) GetUser(id int) (*User, error) {
 
-	stmtOut, err := udb.db.Prepare("SELECT * FROM user WHERE id = $1 LIMIT 1")
+	stmtOut, err := udb.db.Prepare("SELECT * FROM \"user\" WHERE id = $1 LIMIT 1")
 	if err != nil {
 		return nil, err
 	}

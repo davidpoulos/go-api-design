@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/davidpoulos/hackin/service"
@@ -20,14 +21,17 @@ func main() {
 
 	us := service.NewUserDB(db)
 
-	// fakeUser := GetMockUser()
-	
-	// e := us.InsertUser(*fakeUser)
-	// fmt.Println(e)
+	fakeUser := GetMockUser()
+	fakeUser.FirstName = "Moe"
+	fakeUser.LastName = "Jangda"
 
 	fmt.Println(us.GetUser(1))
 
+	err = us.UpdateUser(1, fakeUser)
+	fmt.Println(err)
 	defer db.Close()
+
+	//fmt.Println(testQueryBuilder(fakeUser))
 
 }
 
@@ -46,7 +50,6 @@ func GetMockUser() (u *service.User) {
 	p, _ := EncryptPassword("pepperoni")
 	return &service.User{
 		FirstName: "David",
-		LastName:  "Poulos",
 		DateCreated: fmt.Sprintf("%d-%02d-%02d",
 			t.Year(), t.Month(), t.Day()),
 		Email:    "david@datafiniti.co",
@@ -65,9 +68,9 @@ func GetPostGresDB() (db *sql.DB, err error) {
 	port := 5432
 
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
-    "password=%s dbname=%s sslmode=disable",
-    host, port, user, pass, dbname)
-	
+		"password=%s dbname=%s sslmode=disable",
+		host, port, user, pass, dbname)
+
 	db, err = sql.Open("postgres", psqlInfo)
 
 	if err != nil {
@@ -79,4 +82,56 @@ func GetPostGresDB() (db *sql.DB, err error) {
 	}
 
 	return db, nil
+}
+
+func testQueryBuilder(u *service.User) string {
+	preparedUpdate := "UPDATE \"user\" SET "
+	i := 0
+
+	updots := make(map[string]int)
+	values := make([]interface{}, 0)
+
+	if u.FirstName != "" {
+		i++
+		updots["first_name"] = i
+		values = append(values, u.FirstName)
+	}
+
+	if u.LastName != "" {
+		i++
+		updots["last_name"] = i
+		values = append(values, u.LastName)
+	}
+
+	if u.Email != "" {
+		i++
+		updots["email"] = i
+		values = append(values, u.Email)
+	}
+
+	if u.DateCreated != "" {
+		i++
+		updots["date_created"] = i
+		values = append(values, u.DateCreated)
+	}
+
+	if u.Role != "" {
+		i++
+		updots["role"] = i
+		values = append(values, u.Role)
+	}
+
+	if u.Password != "" {
+		i++
+		updots["password"] = i
+		values = append(values, u.Password)
+	}
+
+	for k, v := range updots {
+		preparedUpdate += k + "= $" + strconv.Itoa(v) + ", "
+	}
+
+	preparedUpdate += "WHERE id = $" + strconv.Itoa(len(values)+1)
+
+	return preparedUpdate
 }
